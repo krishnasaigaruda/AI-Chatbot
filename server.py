@@ -3,6 +3,7 @@
 
 import http.server
 import json
+import re
 import urllib.request
 import urllib.parse
 import ssl
@@ -37,13 +38,26 @@ def clean_response(text):
         try:
             data = json.loads(text)
             if "choices" in data:
-                return clean_response(data["choices"][0]["message"]["content"])
+                msg = data["choices"][0]["message"]
+                # Prefer content over reasoning_content
+                content = msg.get("content", "")
+                if content and content.strip():
+                    return clean_response(content)
+                # Fall back to reasoning only if no content
+                reasoning = msg.get("reasoning_content", "")
+                if reasoning:
+                    return clean_response(reasoning)
             if "content" in data and data["content"]:
                 return clean_response(data["content"])
             if "reasoning_content" in data:
                 return clean_response(data.get("content") or data.get("reasoning_content", ""))
         except (json.JSONDecodeError, KeyError, IndexError):
             pass
+    # Strip leaked reasoning/thinking blocks
+    # Remove <think>...</think> blocks
+    text = re.sub(r'<think>[\s\S]*?</think>', '', text).strip()
+    # Remove <reasoning>...</reasoning> blocks
+    text = re.sub(r'<reasoning>[\s\S]*?</reasoning>', '', text).strip()
     # Strip Pollinations ads/promos
     ad_patterns = [
         "pollinations.ai",
@@ -96,7 +110,7 @@ def call_ai(messages, retries=3):
     # Try POST first
     for attempt in range(retries):
         try:
-            payload = json.dumps({"messages": trimmed}).encode("utf-8")
+            payload = json.dumps({"messages": trimmed, "model": "openai"}).encode("utf-8")
             req = urllib.request.Request(API_URL, data=payload, headers=HEADERS, method="POST")
             with urllib.request.urlopen(req, timeout=120, context=ssl_ctx) as resp:
                 raw = resp.read().decode("utf-8")
@@ -110,7 +124,7 @@ def call_ai(messages, retries=3):
     # Fallback: GET with just the last message
     if last_user:
         try:
-            url = API_URL + urllib.parse.quote(last_user)
+            url = API_URL + urllib.parse.quote(last_user) + "?model=openai"
             req = urllib.request.Request(url, headers={"User-Agent": HEADERS["User-Agent"]})
             with urllib.request.urlopen(req, timeout=120, context=ssl_ctx) as resp:
                 raw = resp.read().decode("utf-8")

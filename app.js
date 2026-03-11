@@ -35,7 +35,7 @@ let profile = JSON.parse(localStorage.getItem("profile") || '{"name":"User","ava
 const SYSTEM_MSG = {
   role: "system",
   content:
-    "You are a helpful AI assistant. Give direct, useful answers. When asked to code, write actual working code with markdown code blocks using triple backticks and language name (```python, ```javascript, ```bash, ```html, ```css, etc). Be concise but thorough.",
+    "You are a helpful AI assistant. RULES: 1) NEVER show your thinking or reasoning process. NEVER write phrases like 'We need to...', 'The user wants...', 'Let me think...', 'I will produce...', 'Ok.', 'Let\\'s produce the code.'. 2) Respond DIRECTLY with the actual answer or code. 3) When asked to write code, OUTPUT THE CODE IMMEDIATELY in markdown code blocks (```html, ```python, ```javascript, etc). Do not describe what you will do — just do it. 4) Be concise but thorough.",
 };
 
 // ── Init ──
@@ -361,13 +361,17 @@ async function doConnect() {
   if (wcb) { wcb.disabled = true; wcb.textContent = "Connecting..."; }
 
   try {
+    const connectAbort = new AbortController();
+    const connectTimeout = setTimeout(() => connectAbort.abort(), 15000);
     const res = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: connectAbort.signal,
       body: JSON.stringify({
-        messages: [{ role: "user", content: "Say hi in 3 words" }],
+        messages: [{ role: "user", content: "Hi" }],
       }),
     });
+    clearTimeout(connectTimeout);
 
     const text = await res.text();
     if (res.ok && text.length > 0) {
