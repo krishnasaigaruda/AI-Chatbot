@@ -26,9 +26,11 @@ const renameConfirm = document.getElementById("rename-confirm");
 let isGenerating = false;
 let isReady = false;
 let chats = JSON.parse(localStorage.getItem("chats") || "[]");
-let activeChatId = null;
-let pendingFiles = []; // files to attach
+let activeChatId = localStorage.getItem("activeChatId") || null;
+let pendingFiles = [];
+let abortController = null;
 let renamingChatId = null;
+let profile = JSON.parse(localStorage.getItem("profile") || '{"name":"User","avatar":null}');
 
 const SYSTEM_MSG = {
   role: "system",
@@ -38,7 +40,27 @@ const SYSTEM_MSG = {
 
 // ── Init ──
 renderChatList();
-if (activeChatId) updateHeaderTitle();
+if (activeChatId && getActiveChat()) {
+  renderMessages();
+  updateHeaderTitle();
+  // Show reconnect banner at bottom of messages
+  showReconnectBanner();
+}
+updateProfileUI();
+
+function showReconnectBanner() {
+  if (isReady) return;
+  const banner = document.createElement("div");
+  banner.className = "reconnect-banner";
+  banner.id = "reconnect-banner";
+  banner.innerHTML = `
+    <span class="status-dot"></span>
+    <span>Disconnected — </span>
+    <button onclick="document.getElementById('load-btn').click(); this.parentElement.remove();">Reconnect</button>
+  `;
+  chatMessages.appendChild(banner);
+  scrollToBottom();
+}
 
 // ══════════════════════════════
 //  SIDEBAR
@@ -71,6 +93,7 @@ function createNewChat() {
 
 function switchChat(id) {
   activeChatId = id;
+  saveActiveChatId();
   renderChatList();
   renderMessages();
   updateHeaderTitle();
@@ -91,7 +114,13 @@ function getActiveChat() {
   return chats.find((c) => c.id === activeChatId);
 }
 
+function saveActiveChatId() {
+  if (activeChatId) localStorage.setItem("activeChatId", activeChatId);
+  else localStorage.removeItem("activeChatId");
+}
+
 function saveChats() {
+  saveActiveChatId();
   // Don't save file data to localStorage (too big), just metadata
   const toSave = chats.map((c) => ({
     ...c,
@@ -195,7 +224,7 @@ function createWelcome() {
     <div class="welcome-icon">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5"><path d="M12 2a7 7 0 017 7c0 3-2 5.5-4 7l-1 4H10l-1-4c-2-1.5-4-4-4-7a7 7 0 017-7z"/><path d="M9 20h6"/><path d="M10 22h4"/></svg>
     </div>
-    <h2>My AI Chatbot</h2>
+    <h2>Welcome${profile.name !== "User" ? ", " + profile.name : ""}!</h2>
     <p>Free AI chatbot powered by open-source models.<br>No account needed. Click <strong>Connect</strong> then start chatting.</p>
     <div class="welcome-tags">
       <span>Write code</span><span>Answer questions</span><span>Brainstorm ideas</span><span>Explain concepts</span>
@@ -322,10 +351,14 @@ function renderAttachmentPreview() {
 // ══════════════════════════════
 //  CONNECT
 // ══════════════════════════════
-loadBtn.addEventListener("click", async () => {
+loadBtn.addEventListener("click", doConnect);
+
+async function doConnect() {
   loadBtn.disabled = true;
   loadBtn.textContent = "...";
   statusText.textContent = "Connecting";
+  const wcb = document.getElementById("welcome-connect-btn");
+  if (wcb) { wcb.disabled = true; wcb.textContent = "Connecting..."; }
 
   try {
     const res = await fetch(API_URL, {
@@ -342,12 +375,18 @@ loadBtn.addEventListener("click", async () => {
       statusText.textContent = "Online";
       statusDot.classList.add("connected");
       loadBtn.style.display = "none";
+      const rb = document.getElementById("reconnect-banner");
+      if (rb) rb.remove();
       userInput.disabled = false;
       sendBtn.disabled = false;
       userInput.focus();
-      // Hide welcome connect button too
+      // Update welcome screen
       const wcb = document.getElementById("welcome-connect-btn");
       if (wcb) wcb.style.display = "none";
+      const wsd = document.getElementById("welcome-status-dot");
+      if (wsd) wsd.classList.add("connected");
+      const wsl = document.getElementById("welcome-status");
+      if (wsl) wsl.querySelector("span:last-child").textContent = "Connected";
       if (chats.length === 0) createNewChat();
     } else {
       throw new Error(text || "No response");
@@ -357,15 +396,28 @@ loadBtn.addEventListener("click", async () => {
     statusText.textContent = "Offline";
     loadBtn.disabled = false;
     loadBtn.textContent = "Retry";
+    const wcb2 = document.getElementById("welcome-connect-btn");
+    if (wcb2) { wcb2.disabled = false; wcb2.textContent = "Retry Connection"; }
   }
-});
+}
 
 // ══════════════════════════════
 //  SEND MESSAGE
 // ══════════════════════════════
 chatForm.addEventListener("submit", (e) => {
   e.preventDefault();
+  if (isGenerating && abortController) {
+    abortController.abort();
+    return;
+  }
   sendMessage();
+});
+
+sendBtn.addEventListener("click", (e) => {
+  if (isGenerating && abortController) {
+    e.preventDefault();
+    abortController.abort();
+  }
 });
 
 userInput.addEventListener("keydown", (e) => {
@@ -379,6 +431,29 @@ userInput.addEventListener("input", () => {
   userInput.style.height = "auto";
   userInput.style.height = Math.min(userInput.scrollHeight, 150) + "px";
 });
+
+// Show message when clicking input before connecting
+userInput.addEventListener("click", () => {
+  if (!isReady) {
+    showToast("Connect to Pollinations first to start chatting!");
+  }
+});
+
+function showToast(msg) {
+  // Remove existing toast
+  const old = document.querySelector(".toast");
+  if (old) old.remove();
+
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.classList.add("show"), 10);
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
 
 // Paste images
 userInput.addEventListener("paste", (e) => {
@@ -453,36 +528,52 @@ async function sendMessage() {
     updateHeaderTitle();
   }
 
-  const typingEl = appendTypingIndicator();
+  const typingEl = appendTypingIndicator(attachments.length > 0);
 
+  abortController = new AbortController();
   isGenerating = true;
-  sendBtn.disabled = true;
   userInput.disabled = true;
+
+  // Transform send button into stop button
+  sendBtn.disabled = false;
+  sendBtn.classList.add("stop-mode");
+  sendBtn.innerHTML = '<div class="stop-square"></div>';
 
   try {
     const res = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: abortController.signal,
       body: JSON.stringify({ messages: chat.messages.map((m) => ({ role: m.role, content: m.content })) }),
     });
 
+    if (typingEl._thinkInterval) clearInterval(typingEl._thinkInterval);
     typingEl.remove();
     const reply = (await res.text()).trim();
 
     if (res.ok && reply) {
-      appendMessageEl("bot", reply);
+      await typeMessage(reply);
       chat.messages.push({ role: "assistant", content: reply });
     } else {
       appendMessageEl("bot", "Error getting response. Try again.");
     }
   } catch (err) {
-    console.error(err);
+    if (typingEl._thinkInterval) clearInterval(typingEl._thinkInterval);
     typingEl.remove();
-    appendMessageEl("bot", "Network error: " + err.message);
+    if (err.name === "AbortError") {
+      appendMessageEl("bot", "Response interrupted.");
+    } else {
+      console.error(err);
+      appendMessageEl("bot", "Network error: " + err.message);
+    }
   }
 
+  // Clean up — restore send button
+  abortController = null;
   saveChats();
   isGenerating = false;
+  sendBtn.classList.remove("stop-mode");
+  sendBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>';
   sendBtn.disabled = false;
   userInput.disabled = false;
   userInput.focus();
@@ -581,7 +672,14 @@ function appendMessageEl(role, text, attachments) {
 
   const avatar = document.createElement("div");
   avatar.className = "message-avatar";
-  avatar.textContent = isUser ? "You" : "AI";
+  if (isUser && profile.avatar) {
+    const img = document.createElement("img");
+    img.src = profile.avatar;
+    img.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:10px;";
+    avatar.appendChild(img);
+  } else {
+    avatar.textContent = isUser ? (profile.name ? profile.name[0].toUpperCase() : "U") : "AI";
+  }
 
   const content = document.createElement("div");
   content.className = "message-content";
@@ -627,22 +725,200 @@ function appendMessageEl(role, text, attachments) {
   return div;
 }
 
-function appendTypingIndicator() {
+function appendTypingIndicator(hasFiles) {
   const div = document.createElement("div");
   div.className = "message bot-message";
+  const firstMsg = hasFiles ? "Reading attached files..." : "Thinking...";
   div.innerHTML = `
     <div class="message-avatar">AI</div>
     <div class="message-content">
       <div class="typing-indicator">
         <span></span><span></span><span></span>
       </div>
+      <div class="thinking-label" style="font-size:0.78rem;color:#71717a;margin-top:4px;">${firstMsg}</div>
     </div>
   `;
   chatMessages.appendChild(div);
   scrollToBottom();
+  div._thinkInterval = startThinkingAnimation(div, hasFiles);
   return div;
+}
+
+async function typeMessage(fullText) {
+  const div = document.createElement("div");
+  div.className = "message bot-message";
+
+  const avatar = document.createElement("div");
+  avatar.className = "message-avatar";
+  avatar.textContent = "AI";
+
+  const content = document.createElement("div");
+  content.className = "message-content";
+
+  div.appendChild(avatar);
+  div.appendChild(content);
+  chatMessages.appendChild(div);
+
+  // Type out character by character, but in chunks for speed
+  const chunkSize = 3;
+  let shown = "";
+  for (let i = 0; i < fullText.length; i += chunkSize) {
+    shown += fullText.slice(i, i + chunkSize);
+    // If there's an unclosed code block, temporarily close it for rendering
+    const openFences = (shown.match(/```/g) || []).length;
+    const renderText = openFences % 2 !== 0 ? shown + "\n```" : shown;
+    content.innerHTML = renderMarkdown(renderText);
+    scrollToBottom();
+    await new Promise((r) => setTimeout(r, 15));
+  }
+  // Final render with full text
+  content.innerHTML = renderMarkdown(fullText);
+  scrollToBottom();
 }
 
 function scrollToBottom() {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
+
+// ══════════════════════════════
+//  THINKING MESSAGES
+// ══════════════════════════════
+const thinkingMessages = [
+  "Thinking...",
+  "Analyzing your message...",
+  "Generating response...",
+  "Processing...",
+  "Crafting a reply...",
+  "Working on it...",
+  "Summarizing thoughts...",
+  "Almost there...",
+];
+
+const thinkingWithFiles = [
+  "Reading attached files...",
+  "Analyzing file contents...",
+  "Processing attachments...",
+  "Parsing your files...",
+  "Reviewing the code...",
+];
+
+function startThinkingAnimation(typingEl, hasFiles) {
+  const msgs = hasFiles ? thinkingWithFiles : thinkingMessages;
+  let idx = 0;
+  const label = typingEl.querySelector(".thinking-label");
+  if (!label) return null;
+
+  return setInterval(() => {
+    idx = (idx + 1) % msgs.length;
+    label.textContent = msgs[idx];
+  }, 2000);
+}
+
+// ══════════════════════════════
+//  PROFILE
+// ══════════════════════════════
+const profileBtn = document.getElementById("profile-btn");
+const profileModal = document.getElementById("profile-modal");
+const profileNameInput = document.getElementById("profile-name-input");
+const profileImageInput = document.getElementById("profile-image-input");
+const profileSave = document.getElementById("profile-save");
+const profileCancel = document.getElementById("profile-cancel");
+const profileAvatarEdit = document.getElementById("profile-avatar-edit");
+const profileAvatarPreviewLetter = document.getElementById("profile-avatar-preview-letter");
+
+function updateProfileUI() {
+  const sidebarName = document.getElementById("sidebar-name");
+  const sidebarAvatar = document.getElementById("sidebar-avatar");
+  const sidebarAvatarLetter = document.getElementById("sidebar-avatar-letter");
+
+  if (sidebarName) sidebarName.textContent = profile.name || "User";
+
+  if (sidebarAvatar) {
+    if (profile.avatar) {
+      sidebarAvatar.innerHTML = '<img src="' + profile.avatar + '" alt="avatar">';
+    } else {
+      sidebarAvatar.innerHTML = "";
+      if (sidebarAvatarLetter) {
+        sidebarAvatarLetter.textContent = (profile.name || "U")[0].toUpperCase();
+        sidebarAvatar.appendChild(sidebarAvatarLetter);
+      } else {
+        sidebarAvatar.textContent = (profile.name || "U")[0].toUpperCase();
+      }
+    }
+  }
+}
+
+function saveProfile() {
+  localStorage.setItem("profile", JSON.stringify(profile));
+  updateProfileUI();
+}
+
+profileBtn.addEventListener("click", () => {
+  profileNameInput.value = profile.name || "";
+  // Show avatar preview
+  const overlay = '<div class="avatar-overlay"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>';
+  if (profile.avatar) {
+    profileAvatarEdit.innerHTML = '<img src="' + profile.avatar + '">' + overlay;
+  } else {
+    profileAvatarEdit.innerHTML = '<span class="avatar-upload-hint">Click to<br>upload</span>' + overlay;
+  }
+
+  profileAvatarEdit.onclick = () => profileImageInput.click();
+  profileModal.style.display = "flex";
+  profileNameInput.focus();
+});
+
+profileImageInput.addEventListener("change", handleProfileImage);
+
+function handleProfileImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    // Resize to small
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 128;
+      canvas.height = 128;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, 128, 128);
+      profile.avatar = canvas.toDataURL("image/jpeg", 0.7);
+      profileAvatarEdit.querySelector("img")?.remove();
+      const hint = profileAvatarEdit.querySelector(".avatar-upload-hint");
+      if (hint) hint.remove();
+      const newImg = document.createElement("img");
+      newImg.src = profile.avatar;
+      profileAvatarEdit.insertBefore(newImg, profileAvatarEdit.firstChild);
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// (profile image listener is set up in the profile section below)
+
+profileCancel.addEventListener("click", () => {
+  profileModal.style.display = "none";
+});
+
+profileSave.addEventListener("click", () => {
+  const name = profileNameInput.value.trim();
+  if (name) profile.name = name;
+  saveProfile();
+  profileModal.style.display = "none";
+  // Re-render welcome if visible
+  const ws = chatMessages.querySelector(".welcome-screen");
+  if (ws) {
+    ws.querySelector("h2").textContent = profile.name !== "User" ? "Welcome, " + profile.name + "!" : "Welcome!";
+  }
+});
+
+profileNameInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") profileSave.click();
+  if (e.key === "Escape") profileCancel.click();
+});
+
+profileModal.addEventListener("click", (e) => {
+  if (e.target === profileModal) profileCancel.click();
+});

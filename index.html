@@ -24,8 +24,17 @@
       <input type="text" id="chat-search" placeholder="Search chats...">
     </div>
     <div class="chat-list" id="chat-list"></div>
-    <div class="sidebar-footer">
-      <span class="brand-sub">Free &amp; Open Source</span>
+    <div class="sidebar-profile" id="profile-btn" title="Edit profile">
+      <div class="profile-avatar" id="sidebar-avatar">
+        <span id="sidebar-avatar-letter">U</span>
+      </div>
+      <div class="profile-info">
+        <div class="profile-name" id="sidebar-name">User</div>
+        <div class="profile-label">Free plan</div>
+      </div>
+      <div class="profile-edit-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      </div>
     </div>
   </aside>
 
@@ -58,6 +67,11 @@
           <span>Brainstorm ideas</span>
           <span>Explain concepts</span>
         </div>
+        <div class="welcome-status" id="welcome-status">
+          <span class="status-dot" id="welcome-status-dot"></span>
+          <span style="font-size:0.82rem;color:#71717a;">Disconnected</span>
+        </div>
+        <button class="welcome-connect-btn" id="welcome-connect-btn" onclick="document.getElementById('load-btn').click()">Connect to AI</button>
       </div>
     </div>
 
@@ -82,6 +96,25 @@
       <p class="input-hint">Powered by Pollinations.ai — 100% free, no API key</p>
     </form>
   </main>
+
+  <!-- Profile modal -->
+  <div class="modal-overlay profile-modal" id="profile-modal" style="display:none">
+    <div class="modal">
+      <h3>Edit Profile</h3>
+      <div class="profile-avatar-edit" id="profile-avatar-edit" title="Upload photo">
+        <span id="profile-avatar-preview-letter" class="avatar-upload-hint">Click to<br>upload</span>
+        <div class="avatar-overlay">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+      </div>
+      <input type="file" id="profile-image-input" accept="image/*" hidden>
+      <input type="text" id="profile-name-input" placeholder="Your name...">
+      <div class="modal-actions">
+        <button class="modal-cancel" id="profile-cancel">Cancel</button>
+        <button class="modal-confirm" id="profile-save">Save</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Rename modal -->
   <div class="modal-overlay" id="rename-modal" style="display:none">

@@ -331,6 +331,13 @@ body {
   color: var(--text);
 }
 
+.welcome-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .welcome-connect-btn {
   margin-top: 16px;
   padding: 14px 40px;
@@ -691,6 +698,19 @@ body {
 #send-btn:hover:not(:disabled) { background: var(--accent-hover); }
 #send-btn:disabled { background: var(--surface3); color: var(--text-dim); cursor: not-allowed; }
 
+#send-btn.stop-mode {
+  background: var(--surface3);
+  cursor: pointer;
+}
+#send-btn.stop-mode:hover { background: var(--red); }
+
+.stop-square {
+  width: 14px;
+  height: 14px;
+  background: var(--text);
+  border-radius: 2px;
+}
+
 .input-hint {
   text-align: center;
   font-size: 0.7rem;
@@ -778,6 +798,206 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+/* ══════ Reconnect banner ══════ */
+.reconnect-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 0.84rem;
+  color: var(--text-dim);
+  align-self: center;
+}
+
+.reconnect-banner button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.reconnect-banner button:hover {
+  background: var(--accent-hover);
+}
+
+/* ══════ Stop button ══════ */
+.stop-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  cursor: pointer;
+  align-self: center;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.stop-btn:hover {
+  background: var(--surface3);
+  color: var(--text);
+  border-color: var(--red);
+}
+
+.stop-btn .stop-icon {
+  width: 12px;
+  height: 12px;
+  background: var(--text-dim);
+  border-radius: 2px;
+}
+
+.stop-btn:hover .stop-icon {
+  background: var(--red);
+}
+
+/* ══════ Toast ══════ */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface3);
+  color: var(--text);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 200;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ══════ Profile ══════ */
+.sidebar-profile {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sidebar-profile:hover {
+  background: var(--surface2);
+}
+
+.profile-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--surface3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.profile-edit-icon {
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+/* Profile Modal */
+.profile-modal .modal {
+  text-align: center;
+}
+
+.profile-modal .profile-avatar-edit {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--surface3);
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px dashed var(--border);
+  transition: border-color 0.2s;
+  position: relative;
+}
+
+.profile-modal .profile-avatar-edit:hover {
+  border-color: var(--accent);
+}
+
+.profile-modal .profile-avatar-edit img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-modal .avatar-upload-hint {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.profile-modal .profile-avatar-edit .avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: 50%;
+}
+
+.profile-modal .profile-avatar-edit:hover .avatar-overlay {
+  opacity: 1;
+}
 
 /* ══════ Mobile ══════ */
 @media (max-width: 768px) {
