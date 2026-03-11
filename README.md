@@ -1,4 +1,4 @@
-# My AI Chatbot
+# Orbix AI
 
 A free, open-source AI chatbot that runs in your browser. No accounts, no API keys, no server costs.
 
@@ -17,11 +17,8 @@ A free, open-source AI chatbot that runs in your browser. No accounts, no API ke
 2. Run the server:
    ```bash
    cd "AI model custom"
+   python3 server.py
    ```
-   Then:
-   ```bash
-    python3 server.py
-    ```
 3. Open http://localhost:8000
 4. Click **Connect** and start chatting!
 
@@ -41,7 +38,7 @@ The Python server acts as a proxy so that browser CORS restrictions don't block 
 ## Credits
 
 - **AI API:** [Pollinations.ai](https://pollinations.ai) — Free, open-source AI API
-- **Models:** Open-source LLMs hosted by Pollinations (Mistral, Llama, **ChatGPT**(model this application uses), etc.)
+- **Models:** Open-source LLMs hosted by Pollinations (Mistral, Llama, ChatGPT, etc.)
 - **Inspiration:** Making AI accessible to everyone, for free
 
 ## License

@@ -176,7 +176,7 @@ class ChatHandler(http.server.SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     server = http.server.HTTPServer(("", PORT), ChatHandler)
-    print(f"\n  My AI Chatbot Server")
+    print(f"\n  Orbix AI Server")
     print(f"  Open: http://localhost:{PORT}")
     print(f"  Press Ctrl+C to stop\n")
     try:

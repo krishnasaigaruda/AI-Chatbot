@@ -149,7 +149,7 @@ function saveChats() {
 
 function updateHeaderTitle() {
   const chat = getActiveChat();
-  headerTitle.textContent = chat ? chat.title : "My AI Chatbot";
+  headerTitle.textContent = chat ? chat.title : "Orbix AI";
 }
 
 function renderChatList() {
@@ -222,7 +222,7 @@ function createWelcome() {
   div.className = "welcome-screen";
   div.innerHTML = `
     <div class="welcome-icon">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5"><path d="M12 2a7 7 0 017 7c0 3-2 5.5-4 7l-1 4H10l-1-4c-2-1.5-4-4-4-7a7 7 0 017-7z"/><path d="M9 20h6"/><path d="M10 22h4"/></svg>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke-width="1.2"><defs><linearGradient id="orb-js" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#818cf8"/></linearGradient></defs><circle cx="12" cy="12" r="5" fill="url(#orb-js)" opacity="0.12" stroke="url(#orb-js)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-30 12 12)" stroke="#e0e0e0" opacity="0.4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(30 12 12)" stroke="#e0e0e0" opacity="0.4"/><circle cx="12" cy="12" r="3" fill="url(#orb-js)" stroke="none"/><circle cx="5.5" cy="7.2" r="1" fill="#38bdf8" stroke="none" opacity="0.5"/><circle cx="18.5" cy="16.8" r="1" fill="#818cf8" stroke="none" opacity="0.5"/><circle cx="17" cy="7" r="0.7" fill="#38bdf8" stroke="none" opacity="0.35"/></svg>
     </div>
     <h2>Welcome${profile.name !== "User" ? ", " + profile.name : ""}!</h2>
     <p>Free AI chatbot powered by open-source models.<br>${isReady ? "Start chatting below!" : "No account needed. Click <strong>Connect</strong> then start chatting."}</p>
