@@ -225,15 +225,16 @@ function createWelcome() {
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5"><path d="M12 2a7 7 0 017 7c0 3-2 5.5-4 7l-1 4H10l-1-4c-2-1.5-4-4-4-7a7 7 0 017-7z"/><path d="M9 20h6"/><path d="M10 22h4"/></svg>
     </div>
     <h2>Welcome${profile.name !== "User" ? ", " + profile.name : ""}!</h2>
-    <p>Free AI chatbot powered by open-source models.<br>No account needed. Click <strong>Connect</strong> then start chatting.</p>
+    <p>Free AI chatbot powered by open-source models.<br>${isReady ? "Start chatting below!" : "No account needed. Click <strong>Connect</strong> then start chatting."}</p>
     <div class="welcome-tags">
       <span>Write code</span><span>Answer questions</span><span>Brainstorm ideas</span><span>Explain concepts</span>
     </div>
-    <button class="welcome-connect-btn" id="welcome-connect-btn">Connect to AI</button>
+    ${isReady ? "" : '<button class="welcome-connect-btn" id="welcome-connect-btn">Connect to AI</button>'}
   `;
-  // Wire up the welcome connect button
-  const btn = div.querySelector(".welcome-connect-btn");
-  btn.addEventListener("click", () => loadBtn.click());
+  if (!isReady) {
+    const btn = div.querySelector(".welcome-connect-btn");
+    if (btn) btn.addEventListener("click", () => loadBtn.click());
+  }
   return div;
 }
 
