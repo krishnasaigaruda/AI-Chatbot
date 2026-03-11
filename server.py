@@ -110,7 +110,7 @@ def call_ai(messages, retries=3):
     # Try POST first
     for attempt in range(retries):
         try:
-            payload = json.dumps({"messages": trimmed, "model": "openai"}).encode("utf-8")
+            payload = json.dumps({"messages": trimmed, "model": "openai-fast"}).encode("utf-8")
             req = urllib.request.Request(API_URL, data=payload, headers=HEADERS, method="POST")
             with urllib.request.urlopen(req, timeout=120, context=ssl_ctx) as resp:
                 raw = resp.read().decode("utf-8")
@@ -124,7 +124,7 @@ def call_ai(messages, retries=3):
     # Fallback: GET with just the last message
     if last_user:
         try:
-            url = API_URL + urllib.parse.quote(last_user) + "?model=openai"
+            url = API_URL + urllib.parse.quote(last_user) + "?model=openai-fast"
             req = urllib.request.Request(url, headers={"User-Agent": HEADERS["User-Agent"]})
             with urllib.request.urlopen(req, timeout=120, context=ssl_ctx) as resp:
                 raw = resp.read().decode("utf-8")
