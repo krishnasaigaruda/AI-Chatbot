@@ -562,6 +562,7 @@ async function sendMessage() {
     typingEl.remove();
     if (err.name === "AbortError") {
       appendMessageEl("bot", "Response interrupted.");
+      chat.messages.push({ role: "assistant", content: "Response interrupted." });
     } else {
       console.error(err);
       appendMessageEl("bot", "Network error: " + err.message);
