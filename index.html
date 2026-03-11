@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My AI Chatbot</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M12 2a7 7 0 017 7c0 3-2 5.5-4 7l-1 4H10l-1-4c-2-1.5-4-4-4-7a7 7 0 017-7z"/><path d="M9 20h6"/><path d="M10 22h4"/></svg>
+        <span>My AI</span>
+      </div>
+      <button class="new-chat-btn" id="new-chat-btn" title="New Chat">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+    <div class="sidebar-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="chat-search" placeholder="Search chats...">
+    </div>
+    <div class="chat-list" id="chat-list"></div>
+    <div class="sidebar-footer">
+      <span class="brand-sub">Free &amp; Open Source</span>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="chat-header">
+      <button class="menu-btn" id="menu-btn" title="Toggle sidebar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div class="header-center">
+        <h1 id="header-title">My AI Chatbot</h1>
+      </div>
+      <div class="header-right">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="status-label" id="status-text">Disconnected</span>
+        <button id="load-btn" class="connect-btn">Connect</button>
+      </div>
+    </header>
+
+    <div class="chat-messages" id="chat-messages">
+      <div class="welcome-screen" id="welcome-screen">
+        <div class="welcome-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5"><path d="M12 2a7 7 0 017 7c0 3-2 5.5-4 7l-1 4H10l-1-4c-2-1.5-4-4-4-7a7 7 0 017-7z"/><path d="M9 20h6"/><path d="M10 22h4"/></svg>
+        </div>
+        <h2>My AI Chatbot</h2>
+        <p>Free AI chatbot powered by open-source models.<br>No account needed. Click <strong>Connect</strong> to begin.</p>
+        <div class="welcome-tags">
+          <span>Write code</span>
+          <span>Answer questions</span>
+          <span>Brainstorm ideas</span>
+          <span>Explain concepts</span>
+        </div>
+      </div>
+    </div>
+
+    <form class="chat-input-form" id="chat-form">
+      <!-- Attachment preview -->
+      <div class="attachment-preview" id="attachment-preview"></div>
+      <div class="input-wrapper">
+        <label class="attach-btn" title="Attach file or image">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          <input type="file" id="file-input" multiple accept="image/*,.txt,.js,.py,.html,.css,.json,.md,.csv,.pdf" hidden>
+        </label>
+        <textarea
+          id="user-input"
+          placeholder="Message My AI..."
+          rows="1"
+          disabled
+        ></textarea>
+        <button type="submit" id="send-btn" disabled title="Send">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+      <p class="input-hint">Powered by Pollinations.ai — 100% free, no API key</p>
+    </form>
+  </main>
+
+  <!-- Rename modal -->
+  <div class="modal-overlay" id="rename-modal" style="display:none">
+    <div class="modal">
+      <h3>Rename Chat</h3>
+      <input type="text" id="rename-input" placeholder="Chat name...">
+      <div class="modal-actions">
+        <button class="modal-cancel" id="rename-cancel">Cancel</button>
+        <button class="modal-confirm" id="rename-confirm">Rename</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
