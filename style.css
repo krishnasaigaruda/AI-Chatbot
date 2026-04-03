@@ -80,6 +80,26 @@ body {
   background: var(--surface3);
 }
 
+.sidebar-code-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 10px 8px;
+  padding: 9px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.sidebar-code-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: rgba(99,102,241,0.08);
+}
+
 .sidebar-search {
   padding: 0 14px 10px;
   display: flex;

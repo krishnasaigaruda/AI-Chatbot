@@ -43,4 +43,4 @@ The Python server acts as a proxy so that browser CORS restrictions don't block 
 
 ## License
 
-MIT — do whatever you want with it. Just give credit to pollinations.com and if you would like, PLS give credit to my github account.
+MIT — do whatever you want with it. Just give credit to pollinations.com and if you would like, PLS give credit to my github "The coder @krishnasaigaruda".

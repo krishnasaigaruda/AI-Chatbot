@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orbix Code</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/lib/codemirror.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="ide-style.css?v=6">
+</head>
+<body>
+
+  <!-- Project Selection Screen -->
+  <div class="project-screen" id="project-screen">
+    <div class="project-header">
+      <a href="index.html" class="back-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to Chat
+      </a>
+      <div class="project-search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="project-search" placeholder="Search projects...">
+      </div>
+    </div>
+    <div class="project-center">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke-width="1.2"><defs><linearGradient id="orb-ide" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#818cf8"/></linearGradient></defs><circle cx="12" cy="12" r="5" fill="url(#orb-ide)" opacity="0.12" stroke="url(#orb-ide)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-30 12 12)" stroke="#e0e0e0" opacity="0.4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(30 12 12)" stroke="#e0e0e0" opacity="0.4"/><circle cx="12" cy="12" r="3" fill="url(#orb-ide)" stroke="none"/></svg>
+      <h1>Orbix Code</h1>
+      <p>Create and edit projects with AI assistance</p>
+      <button class="create-project-btn" id="new-project-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        New Project
+      </button>
+      <div class="project-list" id="project-list"></div>
+    </div>
+  </div>
+
+  <!-- New Project Modal -->
+  <div class="modal-overlay" id="new-project-modal" style="display:none">
+    <div class="modal">
+      <h3>New Project</h3>
+      <input type="text" id="project-name-input" placeholder="Project name..." autofocus>
+      <label class="template-label">Template</label>
+      <div class="template-list">
+        <button class="template-btn active" data-template="html">HTML/CSS/JS</button>
+        <button class="template-btn" data-template="blank">Blank</button>
+      </div>
+      <label class="template-label">Save Location</label>
+      <button class="save-location-btn" id="pick-save-location" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+        <span id="save-location-text">Choose folder...</span>
+      </button>
+      <input type="text" id="save-path-input" placeholder="Or type path: ~/Projects/myproject" style="margin-top:6px;">
+      <div class="modal-actions">
+        <button class="modal-cancel" id="project-cancel">Cancel</button>
+        <button class="modal-confirm" id="project-create">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="modal-overlay search-modal" id="search-modal" style="display:none">
+    <div class="modal search-modal-body">
+      <div class="search-input-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="search-input" placeholder="Search in files...">
+        <kbd>Esc</kbd>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
+
+  <!-- IDE Screen -->
+  <div class="ide-screen" id="ide-screen" style="display:none">
+    <!-- Toolbar -->
+    <div class="ide-toolbar">
+      <div class="toolbar-left">
+        <button class="toolbar-btn" id="ide-back-btn" title="Back to projects">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <span class="toolbar-project-name" id="toolbar-project-name"></span>
+      </div>
+      <div class="toolbar-center">
+        <button class="toolbar-btn" id="search-btn" title="Search in files (Ctrl+F)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          Search
+        </button>
+        <button class="toolbar-btn" id="preview-btn" title="Open Preview">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Open Preview
+        </button>
+      </div>
+      <div class="toolbar-right">
+        <button class="toolbar-btn" id="save-folder-btn" title="Save to folder">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+          Save
+        </button>
+        <button class="toolbar-btn" id="download-btn" title="Download as ZIP">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          ZIP
+        </button>
+        <button class="toolbar-btn ai-toggle-btn" id="ai-toggle-btn" title="Toggle AI Panel">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          AI
+        </button>
+      </div>
+    </div>
+
+    <!-- IDE Body -->
+    <div class="ide-body">
+      <!-- File Explorer -->
+      <div class="ide-sidebar" id="ide-sidebar">
+        <div class="resize-handle resize-right" data-resize="sidebar"></div>
+        <div class="sidebar-section-header">
+          <span>Explorer</span>
+          <div class="file-actions">
+            <button class="file-action-btn" id="new-file-btn" title="New File">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15h6"/></svg>
+            </button>
+            <button class="file-action-btn" id="new-folder-btn" title="New Folder">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><path d="M12 11v6M9 14h6"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="file-tree" id="file-tree"></div>
+      </div>
+
+      <!-- Editor -->
+      <div class="ide-main">
+        <div class="ide-editor-area">
+          <div class="tab-bar" id="tab-bar"></div>
+          <div class="editor-container" id="editor-container">
+            <div class="editor-loading" id="editor-loading">Loading editor...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Chat Panel -->
+      <div class="ide-ai-panel" id="ide-ai-panel">
+        <div class="resize-handle resize-left" data-resize="ai-panel"></div>
+        <div class="ai-panel-header">
+          <div class="ai-panel-header-left">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.5"><defs><linearGradient id="orb-hdr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#818cf8"/></linearGradient></defs><circle cx="12" cy="12" r="4" fill="url(#orb-hdr)" stroke="url(#orb-hdr)" opacity="0.8"/><circle cx="12" cy="12" r="8" stroke="url(#orb-hdr)" opacity="0.3" fill="none"/></svg>
+            <span>Orbix AI</span>
+          </div>
+          <div class="ai-panel-header-right">
+            <button class="ai-clear-btn" id="ai-clear-btn" title="Clear chat">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </button>
+            <button class="ai-close-btn" id="ai-close-btn">&times;</button>
+          </div>
+        </div>
+        <div class="ai-messages" id="ai-messages">
+          <div class="ai-welcome" id="ai-welcome">
+            <div class="ai-welcome-orb">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke-width="1"><defs><linearGradient id="orb-ai2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#818cf8"/></linearGradient></defs><circle cx="12" cy="12" r="5" fill="url(#orb-ai2)" opacity="0.15" stroke="url(#orb-ai2)"/><circle cx="12" cy="12" r="9" stroke="url(#orb-ai2)" opacity="0.2" fill="none" stroke-dasharray="4 3"/><circle cx="12" cy="12" r="3" fill="url(#orb-ai2)" stroke="none"/></svg>
+            </div>
+            <h3>Orbix Code</h3>
+            <p>Build, edit, and understand code with AI. Ask anything.</p>
+            <div class="ai-suggestions">
+              <button class="ai-suggest-btn" data-prompt="Create a modern landing page with animations and clean typography">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                Landing page
+              </button>
+              <button class="ai-suggest-btn" data-prompt="Add a smooth dark/light theme toggle with CSS transitions">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                Theme toggle
+              </button>
+              <button class="ai-suggest-btn" data-prompt="Explain the current code in detail — what it does and how it works">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+                Explain code
+              </button>
+              <button class="ai-suggest-btn" data-prompt="Refactor the current code to be cleaner and more maintainable">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                Refactor
+              </button>
+            </div>
+          </div>
+        </div>
+        <form class="ai-input-form" id="ai-form" action="javascript:void(0)" onsubmit="return false">
+          <div class="ai-input-wrapper">
+            <textarea id="ai-input" placeholder="Ask Orbix to build something..." rows="1"></textarea>
+            <button type="submit" id="ai-send-btn" title="Send message">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            </button>
+          </div>
+          <div class="ai-input-hint">
+            <span>Shift+Enter for new line</span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Dialog -->
+  <div class="modal-overlay" id="orbix-dialog" style="display:none">
+    <div class="modal">
+      <h3 id="dialog-title">Confirm</h3>
+      <p id="dialog-message" style="color:var(--text-dim);font-size:0.85rem;margin-bottom:12px;line-height:1.5;"></p>
+      <input type="text" id="dialog-input" style="display:none">
+      <div class="modal-actions">
+        <button class="modal-cancel" id="dialog-cancel">Cancel</button>
+        <button class="modal-confirm" id="dialog-ok">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Picker -->
+  <div class="modal-overlay" id="preview-picker" style="display:none">
+    <div class="modal">
+      <h3>Open Preview</h3>
+      <p style="color:var(--text-dim);font-size:0.82rem;margin-bottom:12px;">Select an HTML file to preview:</p>
+      <div id="preview-file-list" class="preview-file-list"></div>
+      <div class="modal-actions">
+        <button class="modal-cancel" id="preview-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/lib/codemirror.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/mode/xml/xml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/mode/css/css.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/mode/python/python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/mode/markdown/markdown.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="ide.js?v=6"></script>
+</body>
+</html>
